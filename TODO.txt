@@ -1,0 +1,5 @@
+ToDo-List:
+
+Model       --> None
+Controller   --> All
+View        --> All
