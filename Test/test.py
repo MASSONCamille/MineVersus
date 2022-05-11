@@ -1,2 +1,3 @@
-test = False
-print(len(str(test)))
+# Test script
+# Not a file of this project !
+
