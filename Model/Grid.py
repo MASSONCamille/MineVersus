@@ -192,6 +192,5 @@ if __name__ == "__main__":
     test.play(1,2)
     test.play(2,0)
 
-    print(test.getCellFromId(29)._closeCells)
     printEndGrid(test.getEndingGrid())
 
