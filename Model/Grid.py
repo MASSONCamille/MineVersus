@@ -1,3 +1,4 @@
+import copy
 import random
 from Model.Cell import *
 
@@ -14,6 +15,7 @@ class Grid:
     __cellList: list[list[Cell]] = []   # register with a list of list:
                                         # list of line
                                         # line = list of Cases
+    __lstMine: list[int] = []
 
     def __init__(self, height: int, width: int, nbMine: int):
         self._height = height
@@ -21,6 +23,14 @@ class Grid:
         self._nbMineTotal = nbMine
         self.gererateGrid()
 
+
+    def getCellFromCord(self, x, y):
+        return self.__cellList[x][y]
+
+    def getCellFromId(self, id):
+        cell = self.__cellList[id // self._width][id % self._width]
+        assert cell._id == id
+        return cell
 
 #---| Play functions |--------------------------------------------------------------------------------------------------
 
@@ -45,7 +55,7 @@ class Grid:
                 cellDetail = [True, None]
                 if not cell._isDiscovered:
                     cellDetail[0] = False
-                    cell.click()
+                    cell.click()    # for know the value
                 cellDetail[1] = cell.getValue()
                 lstcell.append(cellDetail)
             listline.append(lstcell)
@@ -58,17 +68,19 @@ class Grid:
         self.__cellList = []
 
         nbCase = self._width * self._height
-        lstMine = random.sample( list(range(0, nbCase)), self._nbMineTotal )   # generate a list with _nbMineTotal
-                                                                                # position
+        self.__lstMine = random.sample( list(range(0, nbCase)), self._nbMineTotal )  # generate a list with _nbMineTotal
+                                                                                    # position
         for i in range(0, self._height):
             line = []
             for j in range(0, self._width):
                 index = j + i * self._width
-                line.append(Cell(i, j, bool(index in lstMine), self.__getCloseMine(self._height, self._width, lstMine, index)))
-
+                cell = Cell(index, bool(index in self.__lstMine))
+                self.__setCloseCells(cell)
+                self.__setNbMineClose(cell)
+                line.append(copy.copy(cell))
             self.__cellList.append( line.copy() )
 
-    def __getCloseMine(self, h, w, lstMine, index):
+    def __setCloseCells(self, cell):
 
         #   general:
         #   x -> h | y -> w
@@ -95,23 +107,30 @@ class Grid:
         #     18  19  20  21  22  23
         #     24  25  26  27  28  29
 
-        nbClose = 0
+        lstClose = [int]
 
-        fl = bool((index % w) == 0)     # if cell not full left
-        fr = bool((index % w) == (w-1)) # if cell not full right
-        ft = bool(index < w)           # if cell not full top
-        fb = bool(index >= ((h-1)*w))   # if cell not full bottom
+        fl = bool((cell._id % self._width) == 0)     # if cell not full left
+        fr = bool((cell._id % self._width) == (self._width-1)) # if cell not full right
+        ft = bool(cell._id < self._width)           # if cell not full top
+        fb = bool(cell._id >= ((self._height-1)*self._width))   # if cell not full bottom
 
-        if not (fl | ft):   nbClose += int( (index-w-1) in lstMine )    # NW corner
-        if not ft:          nbClose += int( (index-w) in lstMine )      # N corner
-        if not (fr | ft):   nbClose += int( (index-w+1) in lstMine )    # NE corner
-        if not fl:          nbClose += int( (index-1) in lstMine )      # W corner
-        if not fr:          nbClose += int( (index+1) in lstMine )      # E corner
-        if not (fl | fb):   nbClose += int( (index+w-1) in lstMine )    # SW corner
-        if not fb:          nbClose += int( (index+w) in lstMine )      # S corner
-        if not (fr | fb):   nbClose += int( (index+w+1) in lstMine )    # SE corner
+        if not (fl | ft):   lstClose.append(cell._id-self._width-1)  # NW corner
+        if not ft:          lstClose.append(cell._id-self._width)    # N corner
+        if not (fr | ft):   lstClose.append(cell._id-self._width+1)  # NE corner
+        if not fl:          lstClose.append(cell._id-1)    # W corner
+        if not fr:          lstClose.append(cell._id+1)    # E corner
+        if not (fl | fb):   lstClose.append(cell._id+self._width-1)  # SW corner
+        if not fb:          lstClose.append(cell._id+self._width)    # S corner
+        if not (fr | fb):   lstClose.append(cell._id+self._width+1)  # SE corner
 
-        return nbClose
+        cell._closeCells = lstClose
+
+    def __setNbMineClose(self, cell):
+        i: int = 0
+        for id in cell._closeCells:
+            if id in self.__lstMine:
+                i += 1
+        cell._nbMineClose = i
 
 
 #---| End Conditions |--------------------------------------------------------------------------------------------------
@@ -146,7 +165,7 @@ if __name__ == "__main__":
             linetext = "|"
             interline = "_"
             for cell in line:
-                linetext += " " + cell + (" " * (7 - len(cell))) + " |"
+                linetext += " " + str(cell) + (" " * (7 - len(cell))) + " |"
                 interline += "_"* 10
             print(linetext)
             print(interline)
@@ -158,20 +177,21 @@ if __name__ == "__main__":
             interline = "_"
             for cell in line:
                 linetext += " " + str(cell[0]) + (" " * (5-len(str(cell[0])))) + " |"
-                linetext2 += " " + cell[1] + (" " * (5-len(cell[1]))) + " |"
+                linetext2 += " " + str(cell[1]) + (" " * (5-len(str(cell[1])))) + " |"
                 interline += "_"* 8
             print(linetext)
             print(linetext2)
             print(interline)
 
 
-    h = 10
-    w = 8
+    h = 5
+    w = 6
     nbm = 10
     test = Grid(h, w, nbm)
 
     test.play(1,2)
-    test.play(2,1)
+    test.play(2,0)
 
+    print(test.getCellFromId(29)._closeCells)
     printEndGrid(test.getEndingGrid())
 

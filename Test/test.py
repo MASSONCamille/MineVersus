@@ -1,3 +1,5 @@
-# Test script
-# Not a file of this project !
+i: int
 
+i = None
+
+print(i)

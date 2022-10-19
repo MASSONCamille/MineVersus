@@ -1,18 +1,17 @@
 
 class Cell:
-    _x: int = 0   # 2D vector --> position
-    _y: int = 0
+    _id: int = None
 
     __isMine: bool = False
     _isDiscovered: bool = False
 
-    __nbMineClose: int = 0 # no mandatory but usefull to dont waste time in algorithm
+    # no mandatory but usefull to dont waste time in algorithm
+    _closeCells: list[list[int]] = []
+    _nbMineClose: int = None
 
-    def __init__(self, x: int, y: int, isMine: bool, nbMineClose: int):
-        self._x = x
-        self._y = y
+    def __init__(self, id: int, isMine: bool):
+        self._id = id
         self.__isMine = isMine
-        self.__nbMineClose = nbMineClose
         self._isDiscovered = False
 
     def click(self):
@@ -22,10 +21,7 @@ class Cell:
     def asExplode(self):
         return self.__isMine & self._isDiscovered
 
-    def getNbMineClose(self):
-        if (not self.__isMine) & self._isDiscovered: return self.__nbMineClose
-
     def getValue(self):
-        if self.asExplode():            return "Mine"
-        elif not self._isDiscovered:    return "Unknown"
-        else:                           return str(self.__nbMineClose)
+        if not self._isDiscovered:  return 10                       # 10 = unknow
+        elif self.__isMine:          return 9                       # 9 = mine
+        else:                       return self._nbMineClose   # [0;8] = how many mine around
